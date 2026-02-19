@@ -166,13 +166,17 @@ class GitHubAPI:
         }
 
     def _paginate_repos(self):
-        """Yield pages of owned repos from the REST API."""
+        """Yield pages of repos accessible to the authenticated user (including org repos)."""
         page = 1
         while True:
             repos_resp = self._request(
                 "GET",
-                f"{self.REST_URL}/users/{self.username}/repos",
-                params={"per_page": 100, "page": page, "type": "owner"},
+                f"{self.REST_URL}/user/repos",
+                params={
+                    "per_page": 100,
+                    "page": page,
+                    "affiliation": "owner,organization_member",
+                },
             )
             repos_resp.raise_for_status()
             repos = repos_resp.json()
@@ -182,6 +186,7 @@ class GitHubAPI:
             if len(repos) < 100:
                 break
             page += 1
+
 
     def _search_count(self, query: str) -> int:
         """Use the GitHub Search API to get a total_count for a query."""
